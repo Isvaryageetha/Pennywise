@@ -1,0 +1,26 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical" android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="16dp">
+
+    <TextView
+        android:id="@+id/tvThreshold"
+        android:text="Threshold Balance: $1000"
+        android:textSize="18sp"
+        android:textColor="@color/black"
+        android:padding="8dp"/>
+
+    <TextView
+        android:id="@+id/tvRemaining"
+        android:text="Remaining: $800"
+        android:textSize="18sp"
+        android:textColor="@color/black"
+        android:padding="8dp"/>
+
+    <TextView
+        android:text="Recent Transactions"
+        android:textSize="16sp"
+        android:textColor="@color/black"
+        android:paddingTop="16dp"/>
+
+</LinearLayout>
