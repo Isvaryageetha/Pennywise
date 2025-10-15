@@ -1,0 +1,32 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+        android:id="@+id/nav_dashboard"
+        android:title="Dashboard"
+        android:icon="@drawable/ic_dashboard"/>
+
+    <item
+        android:id="@+id/nav_expenses"
+        android:title="Expenses"
+        android:icon="@drawable/ic_expense"/>
+
+    <item
+        android:id="@+id/nav_savings"
+        android:title="Savings"
+        android:icon="@drawable/ic_savings"/>
+
+    <item
+        android:id="@+id/nav_bills"
+        android:title="Bills"
+        android:icon="@drawable/ic_bills"/>
+
+    <item
+        android:id="@+id/nav_analytics"
+        android:title="Analytics"
+        android:icon="@drawable/ic_analytics"/>
+
+    <item
+        android:id="@+id/nav_settings"
+        android:title="Settings"
+        android:icon="@drawable/ic_settings"/>
+</menu>

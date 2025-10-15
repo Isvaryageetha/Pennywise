@@ -1,0 +1,26 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="16dp">
+
+    <TextView
+        android:text="Monthly Analytics"
+        android:textSize="18sp"
+        android:textColor="@color/black"
+        android:paddingBottom="16dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"/>
+
+    <com.github.mikephil.charting.charts.BarChart
+        android:id="@+id/barChartExpenses"
+        android:layout_width="match_parent"
+        android:layout_height="200dp"
+        android:layout_marginTop="8dp"/>
+
+    <com.github.mikephil.charting.charts.BarChart
+        android:id="@+id/barChartSavings"
+        android:layout_width="match_parent"
+        android:layout_height="200dp"
+        android:layout_marginTop="16dp"/>
+</LinearLayout>
