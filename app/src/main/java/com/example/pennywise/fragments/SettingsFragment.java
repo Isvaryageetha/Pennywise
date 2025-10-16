@@ -9,8 +9,11 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import com.example.pennywise.R;
+import com.example.pennywise.service.NotificationHelper;
 
 public class SettingsFragment extends Fragment {
+
+    private Switch switchDark, switchNotifications;
 
     public SettingsFragment() {}
 
@@ -19,15 +22,32 @@ public class SettingsFragment extends Fragment {
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_settings, container, false);
 
-        Switch switchDark = view.findViewById(R.id.switchDarkMode);
-        switchDark.setOnCheckedChangeListener((CompoundButton buttonView, boolean isChecked) -> {
+        switchDark = view.findViewById(R.id.switchDarkMode);
+        switchNotifications = view.findViewById(R.id.switchNotifications);
+
+        setupDarkModeSwitch();
+        setupNotificationSwitch();
+
+        return view;
+    }
+
+    private void setupDarkModeSwitch() {
+        switchDark.setOnCheckedChangeListener((buttonView, isChecked) -> {
             if (isChecked) {
                 AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
             } else {
                 AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
             }
         });
+    }
 
-        return view;
+    private void setupNotificationSwitch() {
+        // Set initial state
+        boolean notificationsEnabled = NotificationHelper.isNotificationEnabled(requireContext());
+        switchNotifications.setChecked(notificationsEnabled);
+
+        switchNotifications.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            NotificationHelper.setNotificationEnabled(requireContext(), isChecked);
+        });
     }
 }

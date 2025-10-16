@@ -1,6 +1,120 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
-             android:layout_width="match_parent"
-             android:layout_height="match_parent">
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="24dp"
+    android:background="@drawable/splash_gradient"
+    android:fitsSystemWindows="true">
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="center_horizontal">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="80dp"
+            android:text="Pennywise"
+            android:textColor="@color/white"
+            android:textSize="36sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="60dp"
+            android:text="Welcome Back"
+            android:textColor="@color/white"
+            android:textSize="18sp" />
+
+        <!-- Email Input -->
+        <com.google.android.material.textfield.TextInputLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            app:boxBackgroundColor="@android:color/transparent"
+            app:boxStrokeColor="@color/white"
+            app:hintTextColor="@color/white"
+            android:hint="Email">
+
+            <EditText
+                android:id="@+id/email_edit_text"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="@color/white"
+                android:textColorHint="@color/white"
+                android:inputType="textEmailAddress" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <!-- Password Input -->
+        <com.google.android.material.textfield.TextInputLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            app:boxBackgroundColor="@android:color/transparent"
+            app:boxStrokeColor="@color/white"
+            app:hintTextColor="@color/white"
+            app:passwordToggleEnabled="true"
+            app:passwordToggleTint="@color/white"
+            android:hint="Password">
+
+            <EditText
+                android:id="@+id/password_edit_text"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="@color/white"
+                android:textColorHint="@color/white"
+                android:inputType="textPassword" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <Button
+            android:id="@+id/login_button"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="40dp"
+            android:background="@color/white"
+            android:text="Login"
+            android:textColor="@color/turquoise"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+
+        <ProgressBar
+            android:id="@+id/progress_bar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:visibility="gone" />
+
+        <TextView
+            android:id="@+id/sign_up_text_view"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="32dp"
+            android:text="Don't have an account? Sign Up"
+            android:textColor="@color/white"
+            android:textSize="14sp" />
+
+        <TextView
+            android:id="@+id/skip_for_now_text_view"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="40dp"
+            android:text="Skip for now →"
+            android:textColor="@color/white"
+            android:textSize="14sp" />
+
+        <ImageView
+            android:id="@+id/login_money_icon"
+            android:layout_width="80dp"
+            android:layout_height="80dp"
+            android:layout_marginTop="40dp"
+            android:src="@drawable/ic_attach_money"
+            android:contentDescription="Money Icon"
+            android:alpha="0.0" />
+
+    </LinearLayout>
+</ScrollView>

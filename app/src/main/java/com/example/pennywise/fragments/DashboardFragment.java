@@ -7,20 +7,12 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 import androidx.fragment.app.Fragment;
 import com.example.pennywise.R;
-import com.example.pennywise.models.Bill;
-import com.example.pennywise.models.Expense;
-import com.example.pennywise.models.SavingsGoal;
-import java.util.ArrayList;
-import java.util.List;
 
 public class DashboardFragment extends Fragment {
 
+    private TextView tvThreshold, tvRemaining, tvBalance;
     private double threshold = 1000.0;
     private double balance = 1200.0;
-
-    private List<Expense> expensesList = new ArrayList<>();
-    private List<SavingsGoal> savingsList = new ArrayList<>();
-    private List<Bill> billsList = new ArrayList<>();
 
     public DashboardFragment() {}
 
@@ -29,26 +21,54 @@ public class DashboardFragment extends Fragment {
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_dashboard, container, false);
 
-        TextView tvThreshold = view.findViewById(R.id.tvThreshold);
-        TextView tvRemaining = view.findViewById(R.id.tvRemaining);
+        // Initialize views
+        tvThreshold = view.findViewById(R.id.tvThreshold);
+        tvRemaining = view.findViewById(R.id.tvRemaining);
+        tvBalance = view.findViewById(R.id.tvBalance);
 
-        tvThreshold.setText("Threshold: $" + threshold);
-        double remaining = calculateBalance();
-        tvRemaining.setText("Remaining: $" + remaining);
+        // Get initial data from MainActivity
+        if (getActivity() instanceof com.example.pennywise.MainActivity) {
+            com.example.pennywise.MainActivity mainActivity = (com.example.pennywise.MainActivity) getActivity();
+            threshold = mainActivity.getBalanceThreshold();
+            balance = mainActivity.getCurrentBalance();
+        }
+
+        updateUI();
 
         return view;
     }
 
-    private double calculateBalance() {
-        double totalExpenses = 0;
-        for(Expense e : expensesList) totalExpenses += e.getAmount();
+    // This method will be called by MainActivity when data changes
+    public void updateDashboardData(double newBalance, double newThreshold) {
+        this.balance = newBalance;
+        this.threshold = newThreshold;
+        updateUI();
+    }
 
-        double totalSavings = 0;
-        for(SavingsGoal s : savingsList) totalSavings += s.getSavedAmount();
+    private void updateUI() {
+        if (getView() != null) {
+            tvThreshold.setText("Threshold: $" + threshold);
+            tvBalance.setText("Current Balance: $" + balance);
 
-        double totalBills = 0;
-        for(Bill b : billsList) if(!b.isPaid()) totalBills += b.getAmount();
+            double remaining = balance - threshold;
+            tvRemaining.setText("Remaining: $" + remaining);
 
-        return balance - (totalExpenses + totalSavings + totalBills);
+            // Change color if below threshold
+            if (remaining < 0) {
+                tvRemaining.setTextColor(getResources().getColor(android.R.color.holo_red_dark));
+            } else {
+                tvRemaining.setTextColor(getResources().getColor(android.R.color.holo_green_dark));
+            }
+        }
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        // Refresh data when fragment becomes visible
+        if (getActivity() instanceof com.example.pennywise.MainActivity) {
+            com.example.pennywise.MainActivity mainActivity = (com.example.pennywise.MainActivity) getActivity();
+            updateDashboardData(mainActivity.getCurrentBalance(), mainActivity.getBalanceThreshold());
+        }
     }
 }

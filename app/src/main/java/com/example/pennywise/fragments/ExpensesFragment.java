@@ -9,20 +9,21 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
-
 import com.example.pennywise.R;
 import com.example.pennywise.adapters.ExpenseAdapter;
+import com.example.pennywise.interfaces.OnDataPassListener;
 import com.example.pennywise.models.Expense;
-
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 public class ExpensesFragment extends Fragment {
 
     private List<Expense> expenseList = new ArrayList<>();
     private ExpenseAdapter adapter;
+    private OnDataPassListener dataPassListener;
 
     public ExpensesFragment() {}
 
@@ -31,6 +32,13 @@ public class ExpensesFragment extends Fragment {
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_expenses, container, false);
 
+        // Get the dataPassListener from Activity
+        try {
+            dataPassListener = (OnDataPassListener) getActivity();
+        } catch (ClassCastException e) {
+            throw new ClassCastException("Activity must implement OnDataPassListener");
+        }
+
         // RecyclerView setup
         RecyclerView rvExpenses = view.findViewById(R.id.rvExpenses);
         rvExpenses.setLayoutManager(new LinearLayoutManager(getContext()));
@@ -38,22 +46,27 @@ public class ExpensesFragment extends Fragment {
         rvExpenses.setAdapter(adapter);
 
         // Input fields
-        EditText etPurpose = view.findViewById(R.id.etPurpose); // this is the "Food" or "Transport" field
+        EditText etPurpose = view.findViewById(R.id.etPurpose);
         EditText etAmount = view.findViewById(R.id.etAmount);
         Button btnAdd = view.findViewById(R.id.btnAddExpense);
 
         btnAdd.setOnClickListener(v -> {
-            String name = etPurpose.getText().toString(); // category
+            String name = etPurpose.getText().toString();
             String amountStr = etAmount.getText().toString();
 
             if (!name.isEmpty() && !amountStr.isEmpty()) {
                 float amount = Float.parseFloat(amountStr);
-                String date = new SimpleDateFormat("dd/MM/yyyy").format(new Date());
+                String date = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(new Date());
 
-                // Add new expense at the top
+                // Add to local list
                 expenseList.add(0, new Expense(name, amount, date));
                 adapter.notifyItemInserted(0);
                 rvExpenses.scrollToPosition(0);
+
+                // Communicate with Activity
+                if (dataPassListener != null) {
+                    dataPassListener.onExpenseAdded(name, amount, date);
+                }
 
                 // Clear input fields
                 etPurpose.setText("");

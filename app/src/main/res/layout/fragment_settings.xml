@@ -1,6 +1,8 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical" android:padding="16dp"
-    android:layout_width="match_parent" android:layout_height="match_parent">
+    android:orientation="vertical"
+    android:padding="16dp"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
 
     <TextView
         android:text="Settings"
@@ -16,4 +18,22 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:paddingTop="16dp"/>
+
+    <Switch
+        android:id="@+id/switchNotifications"
+        android:text="BalanceSavings Reminders"
+        android:textColor="@color/black"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:paddingTop="16dp"/>
+
+    <TextView
+        android:text="Get notifications for:\n• Low balance alerts\n• Savings progress\n• Unpaid bills\n• Daily spending"
+        android:textSize="12sp"
+        android:textColor="@color/black"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingTop="8dp"
+        android:paddingStart="8dp"/>
+
 </LinearLayout>
