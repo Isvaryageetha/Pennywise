@@ -1,16 +1,21 @@
 package com.example.pennywise.service;
 
-import android.app.AlarmManager;
-import android.app.PendingIntent;
 import android.content.Context;
-import android.content.Intent;
 import android.content.SharedPreferences;
 import android.util.Log;
+import androidx.work.Constraints;
+import androidx.work.ExistingPeriodicWorkPolicy;
+import androidx.work.NetworkType;
+import androidx.work.PeriodicWorkRequest;
+import androidx.work.WorkManager;
+import com.example.pennywise.workers.NotificationWorker;
+import java.util.concurrent.TimeUnit;
 
 public class NotificationHelper {
     private static final String TAG = "NotificationHelper";
     private static final String PREFS_NAME = "PennywisePrefs";
     private static final String KEY_NOTIFICATION_ENABLED = "notifications_enabled";
+    private static final String WORK_TAG = "pennywise_notification_work";
 
     public static void startNotificationService(Context context) {
         if (!isNotificationEnabled(context)) {
@@ -19,21 +24,41 @@ public class NotificationHelper {
         }
 
         try {
-            Intent serviceIntent = new Intent(context, NotificationService.class);
-            context.startService(serviceIntent);
-            Log.d(TAG, "Notification service started");
+            // Create constraints (optional - you can remove this if you want)
+            Constraints constraints = new Constraints.Builder()
+                    .setRequiredNetworkType(NetworkType.NOT_REQUIRED)
+                    .setRequiresCharging(false)
+                    .setRequiresBatteryNotLow(true)
+                    .build();
+
+            // Create periodic work request - using TimeUnit instead of java.time.Duration
+            PeriodicWorkRequest notificationWork =
+                    new PeriodicWorkRequest.Builder(NotificationWorker.class,
+                            6, TimeUnit.HOURS, // Repeat every 6 hours
+                            15, TimeUnit.MINUTES) // Flexible interval
+                            .setConstraints(constraints)
+                            .build();
+
+            // Enqueue the work with unique name (replace existing if any)
+            WorkManager.getInstance(context).enqueueUniquePeriodicWork(
+                    WORK_TAG,
+                    ExistingPeriodicWorkPolicy.REPLACE,
+                    notificationWork
+            );
+
+            Log.d(TAG, "Notification work scheduled every 6 hours");
+
         } catch (Exception e) {
-            Log.e(TAG, "Error starting notification service: " + e.getMessage());
+            Log.e(TAG, "Error scheduling notification work: " + e.getMessage(), e);
         }
     }
 
     public static void stopNotificationService(Context context) {
         try {
-            Intent serviceIntent = new Intent(context, NotificationService.class);
-            context.stopService(serviceIntent);
-            Log.d(TAG, "Notification service stopped");
+            WorkManager.getInstance(context).cancelUniqueWork(WORK_TAG);
+            Log.d(TAG, "Notification work cancelled");
         } catch (Exception e) {
-            Log.e(TAG, "Error stopping notification service: " + e.getMessage());
+            Log.e(TAG, "Error stopping notification service: " + e.getMessage(), e);
         }
     }
 

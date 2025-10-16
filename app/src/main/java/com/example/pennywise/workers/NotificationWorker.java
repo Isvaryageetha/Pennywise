@@ -1,17 +1,17 @@
-package com.example.pennywise.service;
+package com.example.pennywise.workers;
 
-import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
-import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Build;
-import android.os.IBinder;
 import android.util.Log;
+import androidx.annotation.NonNull;
 import androidx.core.app.NotificationCompat;
+import androidx.work.Worker;
+import androidx.work.WorkerParameters;
 import com.example.pennywise.MainActivity;
 import com.example.pennywise.R;
 import com.example.pennywise.models.Bill;
@@ -19,121 +19,72 @@ import com.example.pennywise.models.Expense;
 import com.example.pennywise.models.SavingsGoal;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
-public class NotificationService extends Service {
-    private static final String TAG = "NotificationService";
-    private static final String CHANNEL_ID = "pennywise_reminders";
-    private static final int NOTIFICATION_ID = 1;
-
+public class NotificationWorker extends Worker {
+    private static final String TAG = "NotificationWorker";
     private SharedPreferences sharedPreferences;
+    private Context context;
 
+    public NotificationWorker(@NonNull Context context, @NonNull WorkerParameters workerParams) {
+        super(context, workerParams);
+        this.context = context;
+        this.sharedPreferences = context.getSharedPreferences("PennywisePrefs", Context.MODE_PRIVATE);
+    }
+
+    @NonNull
     @Override
-    public void onCreate() {
-        super.onCreate();
-        Log.d(TAG, "NotificationService created");
-        sharedPreferences = getSharedPreferences("PennywisePrefs", Context.MODE_PRIVATE);
-        createNotificationChannel();
-    }
+    public Result doWork() {
+        Log.d(TAG, "NotificationWorker running");
 
-    @Override
-    public int onStartCommand(Intent intent, int flags, int startId) {
-        Log.d(TAG, "NotificationService started");
-
-        showOngoingNotification();
-        checkAndSendReminders();
-
-        return START_STICKY;
-    }
-
-    @Override
-    public IBinder onBind(Intent intent) {
-        return null;
-    }
-
-    private void createNotificationChannel() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            NotificationChannel channel = new NotificationChannel(
-                    CHANNEL_ID,
-                    "Pennywise Reminders",
-                    NotificationManager.IMPORTANCE_LOW
-            );
-            channel.setDescription("Balance and savings reminders");
-            channel.setShowBadge(false);
-
-            NotificationManager manager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-            if (manager != null) {
-                manager.createNotificationChannel(channel);
-            }
-        }
-    }
-
-    private void showOngoingNotification() {
-        Intent intent = new Intent(this, MainActivity.class);
-        int flags = PendingIntent.FLAG_UPDATE_CURRENT;
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            flags |= PendingIntent.FLAG_IMMUTABLE;
-        }
-
-        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, flags);
-
-        Notification notification = new NotificationCompat.Builder(this, CHANNEL_ID)
-                .setContentTitle("Pennywise")
-                .setContentText("Tracking your finances")
-                .setSmallIcon(R.drawable.ic_attach_money)
-                .setContentIntent(pendingIntent)
-                .setOngoing(true)
-                .setAutoCancel(false)
-                .setPriority(NotificationCompat.PRIORITY_LOW) // Set low priority
-                .setCategory(NotificationCompat.CATEGORY_SERVICE)
-                .build();
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q)
-        {
-            startForeground(NOTIFICATION_ID, notification);
-        } else
-        {
-            startForeground(NOTIFICATION_ID, notification);
-        }
-    }
-
-    private void checkAndSendReminders() {
         if (!isNotificationEnabled()) {
             Log.d(TAG, "Notifications are disabled");
-            return;
+            return Result.success();
         }
 
         if (!shouldSendNotificationToday()) {
             Log.d(TAG, "Already sent notification today");
-            return;
+            return Result.success();
         }
 
+        checkAndSendReminders();
+        markNotificationSent();
+
+        return Result.success();
+    }
+
+    private void checkAndSendReminders() {
         FinancialData data = getFinancialData();
         checkLowBalance(data);
         checkSavingsProgress(data);
         checkUnpaidBills(data);
         checkDailySpending(data);
-        markNotificationSent();
     }
-    private FinancialData getFinancialData()
-    {
+
+    private FinancialData getFinancialData() {
         FinancialData data = new FinancialData();
+
         data.expenses = new ArrayList<>();
         data.expenses.add(new Expense("Food", 150f, getCurrentDate()));
         data.expenses.add(new Expense("Transport", 80f, getCurrentDate()));
+
         data.savings = new ArrayList<>();
         data.savings.add(new SavingsGoal("New Phone", 500f, 200f));
+
         data.bills = new ArrayList<>();
         data.bills.add(new Bill("Electricity", 75.0, false));
+
         data.balance = 1200.0;
         data.threshold = 1000.0;
+
         return data;
     }
 
     private void checkLowBalance(FinancialData data) {
         double remaining = calculateRemainingBalance(data);
+
         if (remaining < data.threshold) {
             String message = String.format(Locale.getDefault(), "Low balance alert! You have $%.2f remaining", remaining);
             sendNotification("💰 Low Balance", message);
@@ -144,6 +95,7 @@ public class NotificationService extends Service {
         for (SavingsGoal goal : data.savings) {
             if (goal.getTargetAmount() > 0) {
                 float progress = (goal.getSavedAmount() / goal.getTargetAmount()) * 100;
+
                 if (progress >= 50 && progress < 100) {
                     String message = String.format(Locale.getDefault(), "You're %d%% towards your %s goal!", (int)progress, goal.getPurpose());
                     sendNotification("🎯 Savings Progress", message);
@@ -158,12 +110,14 @@ public class NotificationService extends Service {
     private void checkUnpaidBills(FinancialData data) {
         int unpaidCount = 0;
         double totalUnpaid = 0;
+
         for (Bill bill : data.bills) {
             if (!bill.isPaid()) {
                 unpaidCount++;
                 totalUnpaid += bill.getAmount();
             }
         }
+
         if (unpaidCount > 0) {
             String message = String.format(Locale.getDefault(), "You have %d unpaid bills totaling $%.2f", unpaidCount, totalUnpaid);
             sendNotification("📅 Unpaid Bills", message);
@@ -173,10 +127,9 @@ public class NotificationService extends Service {
     private void checkDailySpending(FinancialData data) {
         double dailyTotal = 0;
         String today = getCurrentDate();
-        for (Expense expense : data.expenses)
-        {
-            if (today.equals(expense.getDate()))
-            {
+
+        for (Expense expense : data.expenses) {
+            if (today.equals(expense.getDate())) {
                 dailyTotal += expense.getAmount();
             }
         }
@@ -201,48 +154,44 @@ public class NotificationService extends Service {
     }
 
     private void sendNotification(String title, String message) {
-        Intent intent = new Intent(this, MainActivity.class);
+        createNotificationChannel();
 
+        Intent intent = new Intent(context, MainActivity.class);
 
         int flags = PendingIntent.FLAG_UPDATE_CURRENT;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             flags |= PendingIntent.FLAG_IMMUTABLE;
         }
 
-        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, flags);
+        PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, intent, flags);
 
-        String reminderChannelId = "pennywise_reminder_notifications";
-        createReminderChannel(reminderChannelId);
-
-        Notification notification = new NotificationCompat.Builder(this, reminderChannelId)
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(context, "pennywise_reminders")
                 .setContentTitle(title)
                 .setContentText(message)
                 .setSmallIcon(R.drawable.ic_attach_money)
                 .setContentIntent(pendingIntent)
                 .setAutoCancel(true)
                 .setStyle(new NotificationCompat.BigTextStyle().bigText(message))
-                .setPriority(NotificationCompat.PRIORITY_DEFAULT)
-                .build();
+                .setPriority(NotificationCompat.PRIORITY_DEFAULT);
 
-        NotificationManager manager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        NotificationManager manager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
         if (manager != null) {
-            manager.notify((int) System.currentTimeMillis(), notification);
+            manager.notify((int) System.currentTimeMillis(), builder.build());
         }
 
         Log.d(TAG, "Notification sent: " + title + " - " + message);
     }
 
-    private void createReminderChannel(String channelId) {
+    private void createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             NotificationChannel channel = new NotificationChannel(
-                    channelId,
-                    "Pennywise Alerts",
+                    "pennywise_reminders",
+                    "Pennywise Reminders",
                     NotificationManager.IMPORTANCE_DEFAULT
             );
-            channel.setDescription("Balance alerts and savings reminders");
-            channel.setShowBadge(true);
+            channel.setDescription("Balance and savings reminders");
 
-            NotificationManager manager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+            NotificationManager manager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
             if (manager != null) {
                 manager.createNotificationChannel(channel);
             }
@@ -268,17 +217,12 @@ public class NotificationService extends Service {
         return new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(new Date());
     }
 
+    // Data holder class
     private static class FinancialData {
         List<Expense> expenses;
         List<SavingsGoal> savings;
         List<Bill> bills;
         double balance;
         double threshold;
-    }
-
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-        Log.d(TAG, "NotificationService destroyed");
     }
 }

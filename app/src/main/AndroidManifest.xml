@@ -33,11 +33,12 @@
             android:name=".MainActivity"
             android:exported="true" />
 
-        <!-- Add Notification Service - FIX THE PATH -->
+        <!-- Add Notification Service with foregroundServiceType -->
         <service
             android:name=".service.NotificationService"
             android:enabled="true"
-            android:exported="false" />
+            android:exported="false"
+            android:foregroundServiceType="dataSync" />
 
     </application>
 </manifest>

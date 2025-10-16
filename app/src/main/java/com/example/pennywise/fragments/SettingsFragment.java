@@ -3,6 +3,7 @@ package com.example.pennywise.fragments;
 import android.os.Bundle;
 import android.widget.CompoundButton;
 import android.widget.Switch;
+import android.widget.Toast; // ADD THIS IMPORT
 import androidx.appcompat.app.AppCompatDelegate;
 import androidx.fragment.app.Fragment;
 import android.view.LayoutInflater;
@@ -48,6 +49,12 @@ public class SettingsFragment extends Fragment {
 
         switchNotifications.setOnCheckedChangeListener((buttonView, isChecked) -> {
             NotificationHelper.setNotificationEnabled(requireContext(), isChecked);
+
+            if (isChecked) {
+                Toast.makeText(requireContext(), "Notifications enabled", Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(requireContext(), "Notifications disabled", Toast.LENGTH_SHORT).show();
+            }
         });
     }
 }

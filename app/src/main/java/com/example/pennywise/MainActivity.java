@@ -24,7 +24,6 @@ public class MainActivity extends AppCompatActivity implements OnDataPassListene
     private long backPressedTime = 0;
     private static final String TAG = "MainActivity";
 
-    // Data that will be shared across fragments
     private double balanceThreshold = 1000.0;
     private double currentBalance = 1200.0;
 
@@ -40,7 +39,6 @@ public class MainActivity extends AppCompatActivity implements OnDataPassListene
             setupBottomNavigation();
             setupBackPressHandler();
 
-            // Start notification service
             NotificationHelper.startNotificationService(this);
 
             Log.d(TAG, "=== MAIN ACTIVITY SETUP COMPLETE ===");
@@ -50,22 +48,12 @@ public class MainActivity extends AppCompatActivity implements OnDataPassListene
             Toast.makeText(this, "Setup error: " + e.getMessage(), Toast.LENGTH_LONG).show();
         }
     }
-
-    // Implement the OnDataPassListener interface methods
     @Override
     public void onExpenseAdded(String category, double amount, String date) {
         Log.d(TAG, "Expense added - Category: " + category + ", Amount: " + amount + ", Date: " + date);
-
-        // Update balance or perform any logic
-        currentBalance -= amount;
-
-        // Show confirmation
-        Toast.makeText(this, "Expense added: " + category + " - $" + amount, Toast.LENGTH_SHORT).show();
-
-        // Notify Dashboard fragment to update
+       currentBalance -= amount;
+       Toast.makeText(this, "Expense added: " + category + " - $" + amount, Toast.LENGTH_SHORT).show();
         updateDashboardFragment();
-
-        // Check if balance is below threshold
         checkBalanceAlert();
     }
 
@@ -74,7 +62,6 @@ public class MainActivity extends AppCompatActivity implements OnDataPassListene
         Log.d(TAG, "Bill added - Name: " + billName + ", Amount: " + amount + ", Paid: " + isPaid);
 
         if (!isPaid) {
-            // Reserve amount for unpaid bills
             currentBalance -= amount;
         }
 
@@ -115,14 +102,13 @@ public class MainActivity extends AppCompatActivity implements OnDataPassListene
     }
 
     private void updateDashboardFragment() {
-        // Get the current Dashboard fragment and update it
+
         Fragment currentFragment = getSupportFragmentManager().findFragmentById(R.id.fragment_container);
         if (currentFragment instanceof DashboardFragment) {
             ((DashboardFragment) currentFragment).updateDashboardData(currentBalance, balanceThreshold);
         }
     }
 
-    // Getters for fragments to access data
     public double getBalanceThreshold() {
         return balanceThreshold;
     }
@@ -135,9 +121,7 @@ public class MainActivity extends AppCompatActivity implements OnDataPassListene
         this.currentBalance = balance;
         updateDashboardFragment();
     }
-
-    // ... rest of your existing MainActivity code (initializeViews, setupBottomNavigation, etc.)
-    private void initializeViews() {
+   private void initializeViews() {
         bottomNav = findViewById(R.id.bottom_navigation);
 
         if (bottomNav == null) {
@@ -168,9 +152,7 @@ public class MainActivity extends AppCompatActivity implements OnDataPassListene
             }
             return true;
         });
-
-        // Load default fragment
-        bottomNav.setSelectedItemId(R.id.nav_dashboard);
+       bottomNav.setSelectedItemId(R.id.nav_dashboard);
     }
 
     private void loadFragment(Fragment fragment, String fragmentName) {
