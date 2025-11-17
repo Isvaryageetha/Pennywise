@@ -1,5 +1,4 @@
 package com.example.pennywise.fragments;
-
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -7,20 +6,15 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 import androidx.fragment.app.Fragment;
 import com.example.pennywise.R;
-
 public class DashboardFragment extends Fragment {
-
     private TextView tvThreshold, tvRemaining, tvBalance;
     private double threshold = 1000.0;
     private double balance = 1200.0;
-
     public DashboardFragment() {}
-
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_dashboard, container, false);
-
         // Initialize views
         tvThreshold = view.findViewById(R.id.tvThreshold);
         tvRemaining = view.findViewById(R.id.tvRemaining);

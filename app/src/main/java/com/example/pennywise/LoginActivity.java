@@ -1,5 +1,4 @@
 package com.example.pennywise;
-
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
@@ -16,7 +15,13 @@ import android.widget.TextView;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 
+// Firebase imports
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.android.gms.tasks.Task; // Required for the task object in addOnCompleteListener
+
 public class LoginActivity extends AppCompatActivity {
+    private FirebaseAuth mAuth;
 
     private EditText emailEditText, passwordEditText;
     private Button loginButton;
@@ -39,6 +44,48 @@ public class LoginActivity extends AppCompatActivity {
         initializeViews();
         setupClickListeners();
         startMoneyIconAnimation();
+
+        // Initialize Firebase Auth
+        mAuth = FirebaseAuth.getInstance();
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+        // Check if user is signed in (non-null) and update UI accordingly.
+        FirebaseUser currentUser = mAuth.getCurrentUser();
+        if(currentUser != null){
+            Log.d(TAG, "User already signed in: " + currentUser.getEmail());
+            // User is already signed in, navigate to MainActivity
+            safeNavigateToMainActivity();
+        } else {
+            Log.d(TAG, "No user signed in.");
+        }
+    }
+
+    private void performLogin(String email, String password) {
+        Log.d(TAG, "Starting Firebase login process for email: " + email);
+
+        progressBar.setVisibility(View.VISIBLE);
+        loginButton.setEnabled(false);
+
+        mAuth.signInWithEmailAndPassword(email, password)
+                .addOnCompleteListener(this, task -> {
+                    progressBar.setVisibility(View.GONE);
+                    loginButton.setEnabled(true);
+
+                    if (task.isSuccessful()) {
+                        // Sign in success, update UI with the signed-in user's information
+                        Log.d(TAG, "signInWithEmail:success");
+                        FirebaseUser user = mAuth.getCurrentUser();
+                        showToast("Login successful!", "✅");
+                        safeNavigateToMainActivity();
+                    } else {
+                        // If sign in fails, display a message to the user.
+                        Log.w(TAG, "signInWithEmail:failure", task.getException());
+                        showErrorDialog("Login Failed", "Authentication failed: " + (task.getException() != null ? task.getException().getMessage() : "Unknown error"));
+                    }
+                });
     }
 
     private void testMainActivityClass() {
@@ -103,7 +150,10 @@ public class LoginActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 Log.d(TAG, "Sign up text clicked");
+                // Implement Firebase user creation here, or navigate to a SignUpActivity
                 showToast("Sign up feature coming soon!", "💡");
+                // If you want to enable sign up, you would call a method like:
+                // createFirebaseUser(emailEditText.getText().toString().trim(), passwordEditText.getText().toString().trim());
             }
         });
 
@@ -156,6 +206,7 @@ public class LoginActivity extends AppCompatActivity {
             focusView.requestFocus();
             Log.d(TAG, "Login validation failed");
         } else {
+            // Call the Firebase login method
             performLogin(email, password);
         }
     }
@@ -164,29 +215,11 @@ public class LoginActivity extends AppCompatActivity {
         return android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches();
     }
 
-    private void performLogin(String email, String password) {
-        Log.d(TAG, "Starting login process");
-
-        progressBar.setVisibility(View.VISIBLE);
-        loginButton.setEnabled(false);
-
-        new Handler().postDelayed(new Runnable() {
-            public void run() {
-                progressBar.setVisibility(View.GONE);
-                loginButton.setEnabled(true);
-
-                Log.d(TAG, "Login simulation completed");
-                showToast("Login successful!", "✅");
-                safeNavigateToMainActivity();
-            }
-        }, 2000);
-    }
 
     private void safeNavigateToMainActivity() {
         try {
             Log.d(TAG, "Attempting safe navigation to MainActivity");
 
-            // Method 1: Try normal navigation
             Intent intent = new Intent(LoginActivity.this, MainActivity.class);
 
             // Add flags for clean start

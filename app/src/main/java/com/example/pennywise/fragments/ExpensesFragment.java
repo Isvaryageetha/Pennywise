@@ -1,5 +1,4 @@
 package com.example.pennywise.fragments;
-
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.Toast;
@@ -38,7 +37,6 @@ public class ExpensesFragment extends Fragment {
         Log.d(TAG, "ExpensesFragment onCreateView started");
 
         try {
-            // Safe way to get the dataPassListener from Activity
             if (getActivity() instanceof OnDataPassListener) {
                 dataPassListener = (OnDataPassListener) getActivity();
                 Log.d(TAG, "DataPassListener connected successfully");
@@ -122,14 +120,10 @@ public class ExpensesFragment extends Fragment {
             }
 
             String date = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(new Date());
-
-            // Add to local list
             expenseList.add(0, new Expense(name, amount, date));
             if (adapter != null) {
                 adapter.notifyItemInserted(0);
             }
-
-            // Scroll to top if RecyclerView exists
             View view = getView();
             if (view != null) {
                 RecyclerView rvExpenses = view.findViewById(R.id.rvExpenses);

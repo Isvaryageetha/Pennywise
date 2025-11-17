@@ -13,27 +13,32 @@
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
-        android:theme="@style/Theme.AppCompat.Light.NoActionBar">
+        android:theme="@style/Theme.Pennywise">
 
-        <!-- Your existing activities -->
+        <!-- Splash Activity -->
         <activity
             android:name=".SplashActivity"
-            android:exported="true">
+            android:exported="true"
+            android:theme="@style/Theme.Pennywise">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
 
+        <!-- Login Activity -->
         <activity
             android:name=".LoginActivity"
-            android:exported="true" />
+            android:exported="true"
+            android:theme="@style/Theme.Pennywise" />
 
+        <!-- Main Activity -->
         <activity
             android:name=".MainActivity"
-            android:exported="true" />
+            android:exported="true"
+            android:theme="@style/Theme.Pennywise" />
 
-        <!-- Add Notification Service with foregroundServiceType -->
+        <!-- Notification Service with foregroundServiceType -->
         <service
             android:name=".service.NotificationService"
             android:enabled="true"
