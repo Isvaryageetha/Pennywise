@@ -1,5 +1,9 @@
 package com.example.pennywise;
 
+import android.content.IntentFilter;
+import android.content.Intent;
+import android.content.BroadcastReceiver;
+
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.Toast;
@@ -48,6 +52,22 @@ public class MainActivity extends AppCompatActivity implements OnDataPassListene
             Toast.makeText(this, "Setup error: " + e.getMessage(), Toast.LENGTH_LONG).show();
         }
     }
+    private NetworkChangeReceiver receiver = new NetworkChangeReceiver();
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        IntentFilter filter = new IntentFilter();
+        filter.addAction("android.net.conn.CONNECTIVITY_CHANGE");
+        registerReceiver(receiver, filter);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        unregisterReceiver(receiver);
+    }
+
     @Override
     public void onExpenseAdded(String category, double amount, String date) {
         Log.d(TAG, "Expense added - Category: " + category + ", Amount: " + amount + ", Date: " + date);
