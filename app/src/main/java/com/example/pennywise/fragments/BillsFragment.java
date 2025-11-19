@@ -1,8 +1,9 @@
 package com.example.pennywise.fragments;
 
-import android.content.Context;
+import android.content.ContentResolver;
+import android.content.ContentValues;
+import android.database.Cursor;
 import android.os.Bundle;
-import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -12,11 +13,10 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.Toast;
 
+import com.example.pennywise.PennywiseContract;
 import com.example.pennywise.R;
 import com.example.pennywise.adapters.BillsAdapter;
-import com.example.pennywise.interfaces.OnDataPassListener;
 import com.example.pennywise.models.Bill;
 
 import java.util.ArrayList;
@@ -26,75 +26,70 @@ public class BillsFragment extends Fragment {
 
     private List<Bill> billsList = new ArrayList<>();
     private BillsAdapter adapter;
-    private OnDataPassListener dataPassListener;
 
     public BillsFragment() {}
-
-    @Override
-    public void onAttach(@NonNull Context context) {
-        super.onAttach(context);
-        // Get the listener from the parent activity
-        if (context instanceof OnDataPassListener) {
-            dataPassListener = (OnDataPassListener) context;
-        } else {
-            throw new RuntimeException(context + " must implement OnDataPassListener");
-        }
-    }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_bills, container, false);
 
-        RecyclerView rvBills = view.findViewById(R.id.rvBills);
-        rvBills.setLayoutManager(new LinearLayoutManager(getContext()));
+        RecyclerView rv = view.findViewById(R.id.rvBills);
+        rv.setLayoutManager(new LinearLayoutManager(getContext()));
         adapter = new BillsAdapter(billsList);
-        rvBills.setAdapter(adapter);
+        rv.setAdapter(adapter);
 
-        EditText etBillName = view.findViewById(R.id.etBillName);
-        EditText etBillAmount = view.findViewById(R.id.etBillAmount);
+        loadBills();
+
+        EditText etName = view.findViewById(R.id.etBillName);
+        EditText etAmount = view.findViewById(R.id.etBillAmount);
         Button btnAdd = view.findViewById(R.id.btnAddBill);
 
         btnAdd.setOnClickListener(v -> {
-            String name = etBillName.getText().toString();
-            String amountStr = etBillAmount.getText().toString();
+            String name = etName.getText().toString();
+            String amtStr = etAmount.getText().toString();
+            if (name.isEmpty() || amtStr.isEmpty()) return;
 
-            if(!name.isEmpty() && !amountStr.isEmpty()) {
-                try {
-                    double amount = Double.parseDouble(amountStr);
+            double amount = Double.parseDouble(amtStr);
 
-                    // Create new bill
-                    Bill newBill = new Bill(name, amount, false);
+            ContentValues v1 = new ContentValues();
+            v1.put(PennywiseContract.BillEntry.COLUMN_NAME, name);
+            v1.put(PennywiseContract.BillEntry.COLUMN_AMOUNT, amount);
+            v1.put(PennywiseContract.BillEntry.COLUMN_IS_PAID, 0);
+            v1.put(PennywiseContract.BillEntry.COLUMN_CREATED_AT, System.currentTimeMillis() + "");
 
-                    // Add to local list
-                    billsList.add(0, newBill);
-                    adapter.notifyItemInserted(0);
+            ContentResolver resolver = requireContext().getContentResolver();
+            resolver.insert(PennywiseContract.BillEntry.CONTENT_URI, v1);
 
-                    // ✅ COMMUNICATION: Notify Activity about new bill
-                    if (dataPassListener != null) {
-                        dataPassListener.onBillAdded(name, amount, false);
-                        dataPassListener.onDataUpdated(); // General update notification
-                    }
+            billsList.add(0, new Bill(name, amount, false));
+            adapter.notifyItemInserted(0);
+            rv.scrollToPosition(0);
 
-                    rvBills.scrollToPosition(0);
-                    etBillName.setText("");
-                    etBillAmount.setText("");
-
-                } catch (NumberFormatException e) {
-                    Toast.makeText(getContext(), "Please enter a valid amount", Toast.LENGTH_SHORT).show();
-                }
-            } else {
-                Toast.makeText(getContext(), "Please fill all fields", Toast.LENGTH_SHORT).show();
-            }
+            etName.setText("");
+            etAmount.setText("");
         });
 
         return view;
     }
 
-    @Override
-    public void onDetach() {
-        super.onDetach();
-        // Clean up reference to avoid memory leaks
-        dataPassListener = null;
+    private void loadBills() {
+        billsList.clear();
+        ContentResolver resolver = requireContext().getContentResolver();
+
+        Cursor c = resolver.query(
+                PennywiseContract.BillEntry.CONTENT_URI,
+                null, null, null,
+                PennywiseContract.BillEntry._ID + " DESC"
+        );
+
+        if (c != null && c.moveToFirst()) {
+            do {
+                String name = c.getString(c.getColumnIndexOrThrow(PennywiseContract.BillEntry.COLUMN_NAME));
+                double amount = c.getDouble(c.getColumnIndexOrThrow(PennywiseContract.BillEntry.COLUMN_AMOUNT));
+                int isPaid = c.getInt(c.getColumnIndexOrThrow(PennywiseContract.BillEntry.COLUMN_IS_PAID));
+                billsList.add(new Bill(name, amount, isPaid == 1));
+            } while (c.moveToNext());
+            c.close();
+        }
     }
 }

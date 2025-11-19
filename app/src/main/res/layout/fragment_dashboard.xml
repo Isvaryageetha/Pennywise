@@ -18,7 +18,7 @@
         android:id="@+id/tvThreshold"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Threshold: $1000"
+        android:text="Threshold: $2000"
         android:textSize="18sp"
         android:padding="8dp"/>
 
