@@ -55,6 +55,11 @@
             android:enabled="true"
             android:exported="false"
             android:foregroundServiceType="dataSync" />
+        <provider
+            android:name=".PennywiseProvider"
+            android:authorities="com.example.pennywise.provider"
+            android:exported="false" />
+
 
     </application>
 </manifest>

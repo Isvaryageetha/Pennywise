@@ -1,4 +1,7 @@
 package com.example.pennywise.fragments;
+import android.content.ContentValues;
+import android.database.Cursor;
+import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.Toast;
@@ -14,6 +17,7 @@ import com.example.pennywise.R;
 import com.example.pennywise.adapters.ExpenseAdapter;
 import com.example.pennywise.interfaces.OnDataPassListener;
 import com.example.pennywise.models.Expense;
+import com.example.pennywise.PennywiseContract;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -30,135 +34,100 @@ public class ExpensesFragment extends Fragment {
     public ExpensesFragment() {}
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_expenses, container, false);
 
-        Log.d(TAG, "ExpensesFragment onCreateView started");
+        if (getActivity() instanceof OnDataPassListener)
+            dataPassListener = (OnDataPassListener) getActivity();
 
-        try {
-            if (getActivity() instanceof OnDataPassListener) {
-                dataPassListener = (OnDataPassListener) getActivity();
-                Log.d(TAG, "DataPassListener connected successfully");
-            } else {
-                Log.w(TAG, "Activity does not implement OnDataPassListener");
-                // Don't throw exception, just show warning and continue
-                Toast.makeText(getContext(), "Communication with main app limited", Toast.LENGTH_SHORT).show();
-            }
-        } catch (Exception e) {
-            Log.e(TAG, "Error setting up dataPassListener: " + e.getMessage());
-        }
+        RecyclerView rvExpenses = view.findViewById(R.id.rvExpenses);
+        rvExpenses.setLayoutManager(new LinearLayoutManager(getContext()));
+        adapter = new ExpenseAdapter(expenseList);
+        rvExpenses.setAdapter(adapter);
 
-        // RecyclerView setup with error handling
-        try {
-            RecyclerView rvExpenses = view.findViewById(R.id.rvExpenses);
-            if (rvExpenses == null) {
-                throw new RuntimeException("RecyclerView not found with ID: rvExpenses");
-            }
+        loadExpenses();
 
-            rvExpenses.setLayoutManager(new LinearLayoutManager(getContext()));
-            adapter = new ExpenseAdapter(expenseList);
-            rvExpenses.setAdapter(adapter);
-            Log.d(TAG, "RecyclerView setup completed");
-
-        } catch (Exception e) {
-            Log.e(TAG, "Error setting up RecyclerView: " + e.getMessage());
-            Toast.makeText(getContext(), "Error setting up expenses list", Toast.LENGTH_LONG).show();
-        }
-
-        // Input fields setup
         setupInputFields(view);
 
         return view;
     }
 
     private void setupInputFields(View view) {
-        try {
-            EditText etPurpose = view.findViewById(R.id.etPurpose);
-            EditText etAmount = view.findViewById(R.id.etAmount);
-            Button btnAdd = view.findViewById(R.id.btnAddExpense);
+        EditText etPurpose = view.findViewById(R.id.etPurpose);
+        EditText etAmount = view.findViewById(R.id.etAmount);
+        Button btnAdd = view.findViewById(R.id.btnAddExpense);
 
-            if (etPurpose == null || etAmount == null || btnAdd == null) {
-                throw new RuntimeException("One or more input fields not found");
-            }
-
-            btnAdd.setOnClickListener(v -> {
-                handleAddExpense(etPurpose, etAmount);
-            });
-
-            Log.d(TAG, "Input fields setup completed");
-
-        } catch (Exception e) {
-            Log.e(TAG, "Error setting up input fields: " + e.getMessage());
-            Toast.makeText(getContext(), "Error setting up input fields", Toast.LENGTH_LONG).show();
-        }
+        btnAdd.setOnClickListener(v -> handleAddExpense(etPurpose, etAmount));
     }
+
     private void handleAddExpense(EditText etPurpose, EditText etAmount) {
-        try {
-            String name = etPurpose.getText().toString().trim();
-            String amountStr = etAmount.getText().toString().trim();
+        String name = etPurpose.getText().toString().trim();
+        String amountStr = etAmount.getText().toString().trim();
 
-            if (name.isEmpty()) {
-                etPurpose.setError("Please enter purpose");
-                return;
-            }
-            if (amountStr.isEmpty()) {
-                etAmount.setError("Please enter amount");
-                return;
-            }
-            float amount;
-            try {
-                amount = Float.parseFloat(amountStr);
-            } catch (NumberFormatException e) {
-                etAmount.setError("Please enter a valid amount");
-                return;
-            }
-
-            if (amount <= 0) {
-                etAmount.setError("Amount must be greater than 0");
-                return;
-            }
-
-            String date = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(new Date());
-            expenseList.add(0, new Expense(name, amount, date));
-            if (adapter != null) {
-                adapter.notifyItemInserted(0);
-            }
-            View view = getView();
-            if (view != null) {
-                RecyclerView rvExpenses = view.findViewById(R.id.rvExpenses);
-                if (rvExpenses != null) {
-                    rvExpenses.scrollToPosition(0);
-                }
-            }
-
-            // Communicate with Activity
-            if (dataPassListener != null) {
-                dataPassListener.onExpenseAdded(name, amount, date);
-                Toast.makeText(getContext(), "Expense added: " + name, Toast.LENGTH_SHORT).show();
-            } else {
-                Toast.makeText(getContext(), "Expense added locally", Toast.LENGTH_SHORT).show();
-            }
-
-            // Clear input fields
-            etPurpose.setText("");
-            etAmount.setText("");
-
-        } catch (Exception e) {
-            Log.e(TAG, "Error adding expense: " + e.getMessage());
-            Toast.makeText(getContext(), "Error adding expense", Toast.LENGTH_SHORT).show();
+        if (name.isEmpty()) {
+            etPurpose.setError("Enter purpose");
+            return;
         }
+        if (amountStr.isEmpty()) {
+            etAmount.setError("Enter amount");
+            return;
+        }
+
+        float amount;
+        try {
+            amount = Float.parseFloat(amountStr);
+        } catch (Exception e) {
+            etAmount.setError("Invalid amount");
+            return;
+        }
+
+        String date = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(new Date());
+
+        ContentValues values = new ContentValues();
+        values.put(PennywiseContract.ExpenseEntry.COLUMN_NAME, name);
+        values.put(PennywiseContract.ExpenseEntry.COLUMN_AMOUNT, amount);
+        values.put(PennywiseContract.ExpenseEntry.COLUMN_DATE, date);
+        values.put(PennywiseContract.ExpenseEntry.COLUMN_CREATED_AT, date);
+
+        Uri insertedUri = getContext().getContentResolver().insert(
+                PennywiseContract.ExpenseEntry.CONTENT_URI, values
+        );
+
+        if (insertedUri != null) {
+            expenseList.add(0, new Expense(name, amount, date));
+            adapter.notifyItemInserted(0);
+
+            if (dataPassListener != null)
+                dataPassListener.onExpenseAdded(name, amount, date);
+
+            Toast.makeText(getContext(), "Expense added", Toast.LENGTH_SHORT).show();
+        }
+
+        etPurpose.setText("");
+        etAmount.setText("");
     }
 
-    @Override
-    public void onResume() {
-        super.onResume();
-        Log.d(TAG, "ExpensesFragment resumed");
-    }
+    private void loadExpenses() {
+        expenseList.clear();
 
-    @Override
-    public void onPause() {
-        super.onPause();
-        Log.d(TAG, "ExpensesFragment paused");
+        Cursor cursor = getContext().getContentResolver().query(
+                PennywiseContract.ExpenseEntry.CONTENT_URI,
+                null, null, null,
+                PennywiseContract.ExpenseEntry._ID + " DESC"
+        );
+
+        if (cursor != null) {
+            while (cursor.moveToNext()) {
+                String name = cursor.getString(cursor.getColumnIndexOrThrow(PennywiseContract.ExpenseEntry.COLUMN_NAME));
+                float amount = cursor.getFloat(cursor.getColumnIndexOrThrow(PennywiseContract.ExpenseEntry.COLUMN_AMOUNT));
+                String date = cursor.getString(cursor.getColumnIndexOrThrow(PennywiseContract.ExpenseEntry.COLUMN_DATE));
+
+                expenseList.add(new Expense(name, amount, date));
+            }
+            cursor.close();
+        }
+
+        if (adapter != null)
+            adapter.notifyDataSetChanged();
     }
 }
