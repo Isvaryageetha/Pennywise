@@ -6,13 +6,22 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
+
 import com.example.pennywise.R;
 import com.example.pennywise.models.Expense;
+import com.google.firebase.Timestamp;
+
+import java.text.SimpleDateFormat;
 import java.util.List;
+import java.util.Locale;
 
 public class ExpenseAdapter extends RecyclerView.Adapter<ExpenseAdapter.ViewHolder> {
+
     private List<Expense> expenseList;
-    public ExpenseAdapter(List<Expense> expenseList) { this.expenseList = expenseList; }
+
+    public ExpenseAdapter(List<Expense> expenseList) {
+        this.expenseList = expenseList;
+    }
 
     @NonNull
     @Override
@@ -25,16 +34,31 @@ public class ExpenseAdapter extends RecyclerView.Adapter<ExpenseAdapter.ViewHold
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         Expense e = expenseList.get(position);
-        holder.tvDate.setText(e.getDate());
-        holder.tvPurpose.setText(e.getName());            // name used as purpose/category
-        holder.tvAmount.setText("$" + e.getAmount());
+
+        // Show date
+        Timestamp ts = e.getCreatedAt();
+        if (ts != null) {
+            String date = new SimpleDateFormat("dd MMM yyyy", Locale.getDefault())
+                    .format(ts.toDate());
+            holder.tvDate.setText(date);
+        } else {
+            holder.tvDate.setText("—");
+        }
+
+        // Show title or category
+        holder.tvPurpose.setText(e.getTitle());     // Instead of getName()
+
+        holder.tvAmount.setText("₹" + e.getAmount());
     }
 
     @Override
-    public int getItemCount() { return expenseList.size(); }
+    public int getItemCount() {
+        return expenseList.size();
+    }
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
         TextView tvDate, tvPurpose, tvAmount;
+
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
             tvDate = itemView.findViewById(R.id.tvDate);

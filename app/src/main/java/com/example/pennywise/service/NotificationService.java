@@ -171,21 +171,31 @@ public class NotificationService extends Service {
     }
 
     private void checkDailySpending(FinancialData data) {
+
         double dailyTotal = 0;
-        String today = getCurrentDate();
-        for (Expense expense : data.expenses)
-        {
-            if (today.equals(expense.getDate()))
-            {
-                dailyTotal += expense.getAmount();
+        String today = getCurrentDate();   // format: yyyy-MM-dd
+
+        for (Expense expense : data.expenses) {
+
+            if (expense.getCreatedAt() != null) {
+
+                // Convert timestamp to yyyy-MM-dd
+                String expenseDate = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+                        .format(expense.getCreatedAt().toDate());
+
+                if (today.equals(expenseDate)) {
+                    dailyTotal += expense.getAmount();
+                }
             }
         }
 
         if (dailyTotal > 100) {
-            String message = String.format(Locale.getDefault(), "You've spent $%.2f today", dailyTotal);
-            sendNotification("💸 Daily Spending", message);
+            String msg = String.format(Locale.getDefault(),
+                    "You've spent ₹%.2f today", dailyTotal);
+            sendNotification("💸 Daily Spending Alert", msg);
         }
     }
+
 
     private double calculateRemainingBalance(FinancialData data) {
         double totalExpenses = 0;

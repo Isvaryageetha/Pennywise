@@ -1,88 +1,86 @@
 package com.example.pennywise.fragments;
 
-import android.database.Cursor;
-import android.net.Uri;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+
+import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 
-import com.example.pennywise.PennywiseContract;
 import com.example.pennywise.R;
+import com.example.pennywise.models.Expense;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.QueryDocumentSnapshot;
 
 public class DashboardFragment extends Fragment {
 
-    private TextView tvThreshold, tvRemaining, tvBalance;
+    private TextView tvThreshold, tvRemaining, tvTotalExpenses;
     private double threshold = 1000.0;
-    private double balance = 0.0;
+    private double totalExpenses = 0.0;
+
+    private FirebaseFirestore db;
 
     public DashboardFragment() {}
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
+
         View view = inflater.inflate(R.layout.fragment_dashboard, container, false);
 
         tvThreshold = view.findViewById(R.id.tvThreshold);
         tvRemaining = view.findViewById(R.id.tvRemaining);
-        tvBalance = view.findViewById(R.id.tvBalance);
+        tvTotalExpenses = view.findViewById(R.id.tvBalance); // rename in XML if needed
 
-        loadDashboardData();
-        updateUI();
+        db = FirebaseFirestore.getInstance();
+
+        loadDataFromFirestore();
 
         return view;
     }
 
-    private void loadDashboardData() {
+    // =============== LOAD EXPENSES FROM FIRESTORE ===============
+    private void loadDataFromFirestore() {
 
-        double totalExpenses = 0.0;
+        db.collection("Expenses")
+                .get()
+                .addOnSuccessListener(querySnapshot -> {
 
-        // ====== GET TOTAL EXPENSES FROM PROVIDER ======
-        Uri expenseUri = PennywiseContract.ExpenseEntry.CONTENT_URI;
-        Cursor cursor = getActivity().getContentResolver().query(
-                expenseUri,
-                new String[]{"SUM(" + PennywiseContract.ExpenseEntry.COLUMN_AMOUNT + ") AS total"},
-                null, null, null
-        );
+                    totalExpenses = 0.0;
 
-        if (cursor != null && cursor.moveToFirst()) {
-            totalExpenses = cursor.getDouble(cursor.getColumnIndexOrThrow("total"));
-            cursor.close();
-        }
+                    for (QueryDocumentSnapshot doc : querySnapshot) {
+                        Expense exp = doc.toObject(Expense.class);
+                        totalExpenses += exp.getAmount();
+                    }
 
-        // ====== CALCULATE BALANCE ======
-        balance = 0 - totalExpenses;
+                    updateUI();
+                })
+                .addOnFailureListener(e -> {
+                    tvTotalExpenses.setText("Failed to load");
+                });
     }
 
+    // =============== UPDATE DASHBOARD UI ==========================
     private void updateUI() {
-        if (getView() != null) {
 
-            tvBalance.setText("Current Balance: ₹" + balance);
-            tvThreshold.setText("Threshold: ₹" + threshold);
+        tvTotalExpenses.setText("Total Expenses: ₹" + totalExpenses);
+        tvThreshold.setText("Threshold: ₹" + threshold);
 
-            double remaining = balance - threshold;
-            tvRemaining.setText("Remaining: ₹" + remaining);
+        double remaining = threshold - totalExpenses;
+        tvRemaining.setText("Remaining: ₹" + remaining);
 
-            if (remaining < 0) {
-                tvRemaining.setTextColor(getResources().getColor(android.R.color.holo_red_dark));
-            } else {
-                tvRemaining.setTextColor(getResources().getColor(android.R.color.holo_green_dark));
-            }
+        if (remaining < 0) {
+            tvRemaining.setTextColor(getResources().getColor(android.R.color.holo_red_dark));
+        } else {
+            tvRemaining.setTextColor(getResources().getColor(android.R.color.holo_green_dark));
         }
     }
 
     @Override
     public void onResume() {
         super.onResume();
-        loadDashboardData();
-        updateUI();
-    }
-
-    // For MainActivity compatibility
-    public void updateDashboardData(double newBalance, double newThreshold) {
-        loadDashboardData();
-        updateUI();
+        loadDataFromFirestore(); // refresh
     }
 }
