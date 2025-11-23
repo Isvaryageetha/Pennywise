@@ -28,40 +28,47 @@ public class AnalyticsFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
+
         View view = inflater.inflate(R.layout.fragment_analytics, container, false);
 
-        // Find chart views
         BarChart expenseChart = view.findViewById(R.id.barChartExpenses);
         BarChart savingsChart = view.findViewById(R.id.barChartSavings);
 
-        // Sample data — explicit float literals
+        // ----------------------------
+        // Add Dummy Expense Data
+        // ----------------------------
         expensesList.add(new Expense("Food", 150f, "2025-10-15"));
         expensesList.add(new Expense("Transport", 80f, "2025-10-15"));
         expensesList.add(new Expense("Books", 120f, "2025-10-15"));
 
+        // ----------------------------
+        // Add Dummy Savings Data
+        // ----------------------------
         savingsList.add(new SavingsGoal("Phone", 500f, 200f));
         savingsList.add(new SavingsGoal("Laptop", 1000f, 100f));
 
-        // Prepare expense entries
+        // ----------------------------
+        // Prepare Expense Chart Entries
+        // ----------------------------
         List<BarEntry> expenseEntries = new ArrayList<>();
         for (int i = 0; i < expensesList.size(); i++) {
-            expenseEntries.add(new BarEntry((float) i, expensesList.get(i).getAmount()));
+            expenseEntries.add(new BarEntry(i, (float) expensesList.get(i).getAmount()));
         }
 
-        // Prepare savings entries (use savedAmount)
-        List<BarEntry> savingsEntries = new ArrayList<>();
-        for (int i = 0; i < savingsList.size(); i++) {
-            savingsEntries.add(new BarEntry((float) i, savingsList.get(i).getSavedAmount()));
-        }
-
-        // Expense chart
         BarDataSet expenseDataSet = new BarDataSet(expenseEntries, "Expenses");
         BarData expenseData = new BarData(expenseDataSet);
         expenseChart.setData(expenseData);
         expenseChart.invalidate();
 
-        // Savings chart
-        BarDataSet savingsDataSet = new BarDataSet(savingsEntries, "Savings (saved)");
+        // ----------------------------
+        // Prepare Savings Chart Entries
+        // ----------------------------
+        List<BarEntry> savingsEntries = new ArrayList<>();
+        for (int i = 0; i < savingsList.size(); i++) {
+            savingsEntries.add(new BarEntry(i, savingsList.get(i).getSavedAmount()));
+        }
+
+        BarDataSet savingsDataSet = new BarDataSet(savingsEntries, "Savings (Saved)");
         BarData savingsData = new BarData(savingsDataSet);
         savingsChart.setData(savingsData);
         savingsChart.invalidate();

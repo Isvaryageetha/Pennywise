@@ -26,41 +26,37 @@ android {
             )
         }
     }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
 }
 
-
-
 dependencies {
 
-    implementation(libs.appcompat)
+    // AndroidX
+    implementation(libs.appcompat) // already latest via version catalog
     implementation(libs.material)
     implementation(libs.activity)
     implementation(libs.constraintlayout)
-    implementation("com.github.PhilJay:MPAndroidChart:v3.1.0")
+
+    implementation("androidx.recyclerview:recyclerview:1.3.1")
     implementation("androidx.work:work-runtime:2.8.1")
+
+    // Charts
+    implementation("com.github.PhilJay:MPAndroidChart:v3.1.0")
+
+    // Firebase BOM (🔥 Keep only one)
+    implementation(platform("com.google.firebase:firebase-bom:34.5.0"))
+
+    // Firebase libraries
+    implementation("com.google.firebase:firebase-analytics")
+    implementation("com.google.firebase:firebase-auth")
+    implementation("com.google.firebase:firebase-firestore")
+
+    // Tests
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
-    implementation("com.google.android.material:material:1.6.0")
-    implementation("androidx.appcompat:appcompat:1.6.1")
-    implementation("com.google.android.material:material:1.9.0")
-    implementation("androidx.constraintlayout:constraintlayout:2.1.4")
-    implementation("androidx.recyclerview:recyclerview:1.3.1")
-    implementation("androidx.work:work-runtime:2.8.1")
-    implementation(platform("com.google.firebase:firebase-bom:34.5.0"))
-    implementation("com.google.firebase:firebase-analytics")
-    implementation("com.google.firebase:firebase-auth")
-    implementation("com.google.firebase:firebase-firestore:24.9.1")
-
-
-
-
-
-
-    // MPAndroidChart (for analytics later)
-
 }

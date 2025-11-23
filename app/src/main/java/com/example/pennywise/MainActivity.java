@@ -15,7 +15,7 @@ import androidx.fragment.app.FragmentTransaction;
 import com.example.pennywise.fragments.AnalyticsFragment;
 import com.example.pennywise.fragments.BillsFragment;
 import com.example.pennywise.fragments.DashboardFragment;
-import com.example.pennywise.fragments.ExpensesFragment;
+import com.example.pennywise.fragments.ExpenseFragment;
 import com.example.pennywise.fragments.SavingsFragment;
 import com.example.pennywise.fragments.SettingsFragment;
 import com.example.pennywise.interfaces.OnDataPassListener;
@@ -122,12 +122,12 @@ public class MainActivity extends AppCompatActivity implements OnDataPassListene
     }
 
     private void updateDashboardFragment() {
-
         Fragment currentFragment = getSupportFragmentManager().findFragmentById(R.id.fragment_container);
         if (currentFragment instanceof DashboardFragment) {
-            ((DashboardFragment) currentFragment).updateDashboardData(currentBalance, balanceThreshold);
+            ((DashboardFragment) currentFragment).onResume();  // refresh the data
         }
     }
+
 
     public double getBalanceThreshold() {
         return balanceThreshold;
@@ -158,7 +158,7 @@ public class MainActivity extends AppCompatActivity implements OnDataPassListene
             if (itemId == R.id.nav_dashboard) {
                 loadFragment(new DashboardFragment(), "Dashboard");
             } else if (itemId == R.id.nav_expenses) {
-                loadFragment(new ExpensesFragment(), "Expenses");
+                loadFragment(new ExpenseFragment(), "Expenses");
             } else if (itemId == R.id.nav_savings) {
                 loadFragment(new SavingsFragment(), "Savings");
             } else if (itemId == R.id.nav_bills) {
