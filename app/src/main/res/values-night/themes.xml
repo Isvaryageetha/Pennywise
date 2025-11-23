@@ -1,8 +1,18 @@
-<resources xmlns:tools="http://schemas.android.com/tools">
+<resources>
     <style name="Theme.Pennywise" parent="Theme.MaterialComponents.DayNight.NoActionBar">
-        <item name="colorPrimaryVariant">@color/white</item>
+
+        <!-- Primary colors for dark mode -->
+        <item name="colorPrimary">@color/turquoise</item>
+        <item name="colorPrimaryVariant">@color/turquoise</item>
         <item name="colorOnPrimary">@color/black</item>
+
+        <!-- Secondary dark theme colors -->
         <item name="colorSecondary">@color/black</item>
         <item name="colorOnSecondary">@color/white</item>
+
+        <!-- Background + Text adapt automatically -->
+        <item name="android:colorBackground">?android:colorBackground</item>
+        <item name="android:textColor">?android:textColorPrimary</item>
+
     </style>
 </resources>

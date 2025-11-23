@@ -6,11 +6,11 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
-import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 
 import com.example.pennywise.R;
 import com.example.pennywise.models.Expense;
+import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 
@@ -32,43 +32,43 @@ public class DashboardFragment extends Fragment {
 
         tvThreshold = view.findViewById(R.id.tvThreshold);
         tvRemaining = view.findViewById(R.id.tvRemaining);
-        tvTotalExpenses = view.findViewById(R.id.tvBalance); // rename in XML if needed
+        tvTotalExpenses = view.findViewById(R.id.tvBalance);
 
         db = FirebaseFirestore.getInstance();
 
-        loadDataFromFirestore();
+        loadData();
 
         return view;
     }
 
-    // =============== LOAD EXPENSES FROM FIRESTORE ===============
-    private void loadDataFromFirestore() {
+    private void loadData() {
+        String uid = FirebaseAuth.getInstance().getCurrentUser().getUid();
 
-        db.collection("Expenses")
-                .get()
-                .addOnSuccessListener(querySnapshot -> {
+        db.collection("Users")
+                .document(uid)
+                .collection("Expenses")
+                .addSnapshotListener((snapshot, e) -> {
 
-                    totalExpenses = 0.0;
+                    if (snapshot == null || e != null) return;
 
-                    for (QueryDocumentSnapshot doc : querySnapshot) {
+                    totalExpenses = 0;
+
+                    for (QueryDocumentSnapshot doc : snapshot) {
                         Expense exp = doc.toObject(Expense.class);
                         totalExpenses += exp.getAmount();
                     }
 
                     updateUI();
-                })
-                .addOnFailureListener(e -> {
-                    tvTotalExpenses.setText("Failed to load");
                 });
     }
 
-    // =============== UPDATE DASHBOARD UI ==========================
     private void updateUI() {
 
-        tvTotalExpenses.setText("Total Expenses: ₹" + totalExpenses);
         tvThreshold.setText("Threshold: ₹" + threshold);
+        tvTotalExpenses.setText("Total Expenses: ₹" + totalExpenses);
 
         double remaining = threshold - totalExpenses;
+
         tvRemaining.setText("Remaining: ₹" + remaining);
 
         if (remaining < 0) {
@@ -76,11 +76,5 @@ public class DashboardFragment extends Fragment {
         } else {
             tvRemaining.setTextColor(getResources().getColor(android.R.color.holo_green_dark));
         }
-    }
-
-    @Override
-    public void onResume() {
-        super.onResume();
-        loadDataFromFirestore(); // refresh
     }
 }

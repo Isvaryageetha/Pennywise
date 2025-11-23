@@ -66,21 +66,37 @@ public class NotificationWorker extends Worker {
     private FinancialData getFinancialData() {
         FinancialData data = new FinancialData();
 
+        // ----------------------------
+        // Dummy Expenses with Timestamps
+        // ----------------------------
         data.expenses = new ArrayList<>();
-        data.expenses.add(new Expense("Food", 150f, getCurrentDate()));
-        data.expenses.add(new Expense("Transport", 80f, getCurrentDate()));
+        data.expenses.add(new Expense("Food", 150f, new com.google.firebase.Timestamp(new Date())));
+        data.expenses.add(new Expense("Transport", 80f, new com.google.firebase.Timestamp(new Date())));
+        data.expenses.add(new Expense("Books", 120f, new com.google.firebase.Timestamp(new Date())));
 
+        // ----------------------------
+        // Dummy Savings Goals
+        // ----------------------------
         data.savings = new ArrayList<>();
         data.savings.add(new SavingsGoal("New Phone", 500f, 200f));
+        data.savings.add(new SavingsGoal("Laptop", 1000f, 100f));
 
+        // ----------------------------
+        // Dummy Bills
+        // ----------------------------
         data.bills = new ArrayList<>();
         data.bills.add(new Bill("Electricity", 75.0, false));
+        data.bills.add(new Bill("Internet", 50.0, false));
 
+        // ----------------------------
+        // Balance & Threshold
+        // ----------------------------
         data.balance = 1200.0;
         data.threshold = 1000.0;
 
         return data;
     }
+
 
     private void checkLowBalance(FinancialData data) {
         double remaining = calculateRemainingBalance(data);

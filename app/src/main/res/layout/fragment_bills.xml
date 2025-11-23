@@ -32,6 +32,16 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"/>
 
+        <!-- ImageView for picking bill image -->
+        <ImageView
+            android:id="@+id/ivPickImage"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:src="@android:drawable/ic_menu_report_image"
+            android:contentDescription="Pick Bill Image"
+            android:layout_marginStart="8dp"
+            android:layout_marginEnd="8dp"/>
+
         <Button
             android:id="@+id/btnAddBill"
             android:text="Add"

@@ -15,6 +15,7 @@ public final class PennywiseContract {
     public static final String PATH_SAVINGS = "savings";
 
     // ----------------------- BILLS -----------------------
+    // ----------------------- BILLS -----------------------
     public static final class BillEntry implements BaseColumns {
         public static final Uri CONTENT_URI =
                 Uri.withAppendedPath(BASE_CONTENT_URI, PATH_BILLS);
@@ -25,6 +26,7 @@ public final class PennywiseContract {
         public static final String COLUMN_AMOUNT = "amount";
         public static final String COLUMN_DUE_DATE = "due_date";
         public static final String COLUMN_IS_PAID = "is_paid";
+        public static final String COLUMN_IMAGE_URI = "image_uri"; // new column for multimedia
         public static final String COLUMN_CREATED_AT = "created_at";
 
         public static final String CONTENT_LIST_TYPE =
@@ -33,6 +35,7 @@ public final class PennywiseContract {
         public static final String CONTENT_ITEM_TYPE =
                 ContentResolver.CURSOR_ITEM_BASE_TYPE + "/vnd." + AUTHORITY + ".bills";
     }
+
 
     // ----------------------- SAVINGS -----------------------
     public static final class SavingsEntry implements BaseColumns {

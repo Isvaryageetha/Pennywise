@@ -14,8 +14,11 @@ import com.github.mikephil.charting.charts.BarChart;
 import com.github.mikephil.charting.data.BarData;
 import com.github.mikephil.charting.data.BarDataSet;
 import com.github.mikephil.charting.data.BarEntry;
+import com.google.firebase.Timestamp;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 public class AnalyticsFragment extends Fragment {
@@ -37,9 +40,9 @@ public class AnalyticsFragment extends Fragment {
         // ----------------------------
         // Add Dummy Expense Data
         // ----------------------------
-        expensesList.add(new Expense("Food", 150f, "2025-10-15"));
-        expensesList.add(new Expense("Transport", 80f, "2025-10-15"));
-        expensesList.add(new Expense("Books", 120f, "2025-10-15"));
+        expensesList.add(new Expense("Food", 150f, toTimestamp("2025-10-15")));
+        expensesList.add(new Expense("Transport", 80f, toTimestamp("2025-10-15")));
+        expensesList.add(new Expense("Books", 120f, toTimestamp("2025-10-15")));
 
         // ----------------------------
         // Add Dummy Savings Data
@@ -74,5 +77,18 @@ public class AnalyticsFragment extends Fragment {
         savingsChart.invalidate();
 
         return view;
+    }
+
+    // ------------------------------------
+    // Convert "2025-10-15" → Timestamp
+    // ------------------------------------
+    private Timestamp toTimestamp(String dateString) {
+        try {
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+            Date date = sdf.parse(dateString);
+            return new Timestamp(date);
+        } catch (Exception e) {
+            return Timestamp.now(); // fallback
+        }
     }
 }

@@ -13,7 +13,7 @@
         android:text="Add Expense"
         android:textSize="18sp"
         android:textStyle="bold"
-        android:textColor="@color/black"/>
+        android:textColor="?android:textColorPrimary"/>
 
     <!-- Row for Purpose + Amount + Add -->
     <LinearLayout

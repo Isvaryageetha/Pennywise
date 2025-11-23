@@ -35,7 +35,6 @@ public class ExpenseAdapter extends RecyclerView.Adapter<ExpenseAdapter.ViewHold
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         Expense e = expenseList.get(position);
 
-        // Show date
         Timestamp ts = e.getCreatedAt();
         if (ts != null) {
             String date = new SimpleDateFormat("dd MMM yyyy", Locale.getDefault())
@@ -45,15 +44,20 @@ public class ExpenseAdapter extends RecyclerView.Adapter<ExpenseAdapter.ViewHold
             holder.tvDate.setText("—");
         }
 
-        // Show title or category
-        holder.tvPurpose.setText(e.getTitle());     // Instead of getName()
-
+        holder.tvPurpose.setText(e.getTitle());
         holder.tvAmount.setText("₹" + e.getAmount());
     }
 
     @Override
     public int getItemCount() {
         return expenseList.size();
+    }
+
+    // ✅ Update the list and refresh RecyclerView
+    public void updateList(List<Expense> newList) {
+        expenseList.clear();
+        expenseList.addAll(newList);
+        notifyDataSetChanged();
     }
 
     public static class ViewHolder extends RecyclerView.ViewHolder {

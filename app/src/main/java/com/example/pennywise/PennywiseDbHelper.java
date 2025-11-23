@@ -7,7 +7,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 public class PennywiseDbHelper extends SQLiteOpenHelper {
 
     public static final String DATABASE_NAME = "pennywise.db";
-    public static final int DATABASE_VERSION = 1;
+    public static final int DATABASE_VERSION = 2; // incremented version
 
     public PennywiseDbHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
@@ -24,6 +24,7 @@ public class PennywiseDbHelper extends SQLiteOpenHelper {
                         PennywiseContract.BillEntry.COLUMN_AMOUNT + " REAL NOT NULL, " +
                         PennywiseContract.BillEntry.COLUMN_DUE_DATE + " TEXT NOT NULL, " +
                         PennywiseContract.BillEntry.COLUMN_IS_PAID + " INTEGER NOT NULL DEFAULT 0, " +
+                        PennywiseContract.BillEntry.COLUMN_IMAGE_URI + " TEXT, " + // new column for multimedia
                         PennywiseContract.BillEntry.COLUMN_CREATED_AT + " TIMESTAMP DEFAULT CURRENT_TIMESTAMP" +
                         ");"
         );

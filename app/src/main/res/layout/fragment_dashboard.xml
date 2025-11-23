@@ -1,41 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:padding="16dp"
-    android:background="@color/white">
+    android:background="?android:colorBackground">
 
     <TextView
         android:id="@+id/tvBalance"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Current Balance: $1200"
+        android:text="Current Balance: ₹1200"
         android:textSize="20sp"
         android:textStyle="bold"
-        android:padding="8dp"/>
+        android:textColor="?android:textColorPrimary"
+        android:padding="8dp" />
 
     <TextView
         android:id="@+id/tvThreshold"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Threshold: $2000"
+        android:text="Threshold: ₹2000"
         android:textSize="18sp"
-        android:padding="8dp"/>
+        android:textColor="?android:textColorPrimary"
+        android:padding="8dp" />
 
     <TextView
         android:id="@+id/tvRemaining"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Remaining: $200"
+        android:text="Remaining: ₹200"
         android:textSize="18sp"
         android:textStyle="bold"
-        android:padding="8dp"/>
+        android:textColor="?android:textColorPrimary"
+        android:padding="8dp" />
 
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Recent Transactions"
         android:textSize="16sp"
-        android:paddingTop="16dp"/>
+        android:textColor="?android:textColorPrimary"
+        android:paddingTop="16dp" />
 
 </LinearLayout>

@@ -44,6 +44,13 @@ dependencies {
     implementation("androidx.recyclerview:recyclerview:1.3.1")
     implementation("androidx.work:work-runtime:2.8.1")
 
+    //geofencing
+    implementation("com.google.android.gms:play-services-location:21.0.1")
+    implementation("com.google.android.libraries.places:places:3.2.0")
+    implementation("com.google.android.gms:play-services-maps:18.1.0")
+
+
+
     // Charts
     implementation("com.github.PhilJay:MPAndroidChart:v3.1.0")
 
@@ -54,6 +61,7 @@ dependencies {
     implementation("com.google.firebase:firebase-analytics")
     implementation("com.google.firebase:firebase-auth")
     implementation("com.google.firebase:firebase-firestore")
+
 
     // Tests
     testImplementation(libs.junit)
