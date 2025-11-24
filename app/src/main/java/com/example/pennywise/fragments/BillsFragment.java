@@ -11,7 +11,6 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
-import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
@@ -23,6 +22,9 @@ import com.example.pennywise.R;
 import com.example.pennywise.adapters.BillsAdapter;
 import com.example.pennywise.models.Bill;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -46,19 +48,16 @@ public class BillsFragment extends Fragment {
 
         RecyclerView rv = view.findViewById(R.id.rvBills);
         rv.setLayoutManager(new LinearLayoutManager(getContext()));
-        adapter = new BillsAdapter(billsList);
+
+        adapter = new BillsAdapter(requireContext(), billsList);
         rv.setAdapter(adapter);
 
         EditText etName = view.findViewById(R.id.etBillName);
         EditText etAmount = view.findViewById(R.id.etBillAmount);
         Button btnAdd = view.findViewById(R.id.btnAddBill);
+        ivPickImage = view.findViewById(R.id.ivPickImage);
 
-        ivPickImage = new ImageView(getContext());
-        ivPickImage.setId(View.generateViewId());
-        ivPickImage.setLayoutParams(new ViewGroup.LayoutParams(200, 200));
-        ivPickImage.setImageResource(R.drawable.ic_placeholder);
         ivPickImage.setOnClickListener(v -> openImagePicker());
-        // You should add this ImageView in your layout above EditTexts if not already present
 
         loadBills();
 
@@ -70,36 +69,74 @@ public class BillsFragment extends Fragment {
 
             double amount = Double.parseDouble(amtStr);
 
-            ContentValues v1 = new ContentValues();
-            v1.put(PennywiseContract.BillEntry.COLUMN_NAME, name);
-            v1.put(PennywiseContract.BillEntry.COLUMN_AMOUNT, amount);
-            v1.put(PennywiseContract.BillEntry.COLUMN_IS_PAID, 0);
-            v1.put(PennywiseContract.BillEntry.COLUMN_CREATED_AT, System.currentTimeMillis() + "");
+            ContentValues values = new ContentValues();
+            values.put(PennywiseContract.BillEntry.COLUMN_NAME, name);
+            values.put(PennywiseContract.BillEntry.COLUMN_AMOUNT, amount);
+            values.put(PennywiseContract.BillEntry.COLUMN_IS_PAID, 0);
+            values.put(PennywiseContract.BillEntry.COLUMN_DUE_DATE, System.currentTimeMillis());
+            values.put(PennywiseContract.BillEntry.COLUMN_CREATED_AT, System.currentTimeMillis() + "");
 
-            if (selectedImageUri != null)
-                v1.put("image_uri", selectedImageUri.toString()); // optional, if storing in DB
+            String savedImagePath = null;
+
+            if (selectedImageUri != null) {
+                savedImagePath = saveImageToInternalStorage(selectedImageUri);
+                values.put("image_uri", savedImagePath);
+            }
 
             ContentResolver resolver = requireContext().getContentResolver();
-            resolver.insert(PennywiseContract.BillEntry.CONTENT_URI, v1);
+            resolver.insert(PennywiseContract.BillEntry.CONTENT_URI, values);
 
-            billsList.add(0, new Bill(name, amount, false, selectedImageUri));
+            billsList.add(0, new Bill(name, amount, false,
+                    savedImagePath != null ? Uri.parse(savedImagePath) : null));
+
             adapter.notifyItemInserted(0);
             rv.scrollToPosition(0);
 
             etName.setText("");
             etAmount.setText("");
             selectedImageUri = null;
-            ivPickImage.setImageResource(R.drawable.ic_placeholder);
+            ivPickImage.setImageResource(android.R.drawable.ic_menu_report_image);
         });
 
         return view;
     }
 
+
+    // ⬇⬇ SAVE IMAGE TO INTERNAL STORAGE HERE ⬇⬇
+    private String saveImageToInternalStorage(Uri imageUri) {
+        try {
+            InputStream inputStream = requireContext().getContentResolver().openInputStream(imageUri);
+
+            File directory = new File(requireContext().getFilesDir(), "bill_images");
+            if (!directory.exists()) directory.mkdir();
+
+            File file = new File(directory, System.currentTimeMillis() + ".jpg");
+            FileOutputStream outputStream = new FileOutputStream(file);
+
+            byte[] buffer = new byte[1024];
+            int length;
+
+            while ((length = inputStream.read(buffer)) > 0) {
+                outputStream.write(buffer, 0, length);
+            }
+
+            inputStream.close();
+            outputStream.close();
+
+            return file.getAbsolutePath();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+    // ⬆⬆ END OF SAVE FUNCTION ⬆⬆
+
+
     private void loadBills() {
         billsList.clear();
         ContentResolver resolver = requireContext().getContentResolver();
 
-        // query the bills table
         try (android.database.Cursor c = resolver.query(
                 PennywiseContract.BillEntry.CONTENT_URI,
                 null, null, null,
@@ -109,14 +146,13 @@ public class BillsFragment extends Fragment {
                 do {
                     String name = c.getString(c.getColumnIndexOrThrow(PennywiseContract.BillEntry.COLUMN_NAME));
                     double amount = c.getDouble(c.getColumnIndexOrThrow(PennywiseContract.BillEntry.COLUMN_AMOUNT));
-                    int isPaid = c.getInt(c.getColumnIndexOrThrow(PennywiseContract.BillEntry.COLUMN_IS_PAID));
+                    boolean isPaid = c.getInt(c.getColumnIndexOrThrow(PennywiseContract.BillEntry.COLUMN_IS_PAID)) == 1;
 
-                    String imageUriStr = null;
-                    int imgIndex = c.getColumnIndex("image_uri");
-                    if (imgIndex != -1) imageUriStr = c.getString(imgIndex);
+                    String imagePath = c.getString(c.getColumnIndexOrThrow("image_uri"));
 
-                    Uri imageUri = (imageUriStr != null) ? Uri.parse(imageUriStr) : null;
-                    billsList.add(new Bill(name, amount, isPaid == 1, imageUri));
+                    Uri imgUri = imagePath != null ? Uri.parse(imagePath) : null;
+
+                    billsList.add(new Bill(name, amount, isPaid, imgUri));
                 } while (c.moveToNext());
             }
         }
@@ -124,10 +160,10 @@ public class BillsFragment extends Fragment {
         adapter.notifyDataSetChanged();
     }
 
+
     private void openImagePicker() {
-        Intent intent = new Intent();
+        Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
         intent.setType("image/*");
-        intent.setAction(Intent.ACTION_GET_CONTENT);
         startActivityForResult(Intent.createChooser(intent, "Select Bill Image"), PICK_IMAGE_REQUEST);
     }
 

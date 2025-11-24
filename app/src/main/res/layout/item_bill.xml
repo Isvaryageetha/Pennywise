@@ -3,14 +3,13 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="horizontal"
-    android:padding="16dp"
-    android:background="?android:attr/selectableItemBackground">
+    android:padding="16dp">
 
     <TextView
         android:id="@+id/tvBillName"
         android:layout_width="0dp"
-        android:layout_weight="1"
         android:layout_height="wrap_content"
+        android:layout_weight="1"
         android:text="Bill Name"
         android:textSize="16sp" />
 
@@ -27,12 +26,15 @@
         android:id="@+id/cbPaid"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Paid" />
+        android:text="Paid"
+        android:buttonTint="@color/black" />
+
     <ImageView
         android:id="@+id/ivBillImage"
         android:layout_width="50dp"
         android:layout_height="50dp"
+        android:layout_marginStart="10dp"
         android:scaleType="centerCrop"
-        android:contentDescription="Bill Image"/>
+        android:contentDescription="Bill Image" />
 
 </LinearLayout>

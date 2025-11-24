@@ -6,22 +6,31 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.database.Cursor;
+import android.net.Uri;
 import android.os.Build;
 import android.util.Log;
+
 import androidx.annotation.NonNull;
 import androidx.core.app.NotificationCompat;
 import androidx.work.Worker;
 import androidx.work.WorkerParameters;
+
 import com.example.pennywise.MainActivity;
+import com.example.pennywise.PennywiseContract;
+import com.example.pennywise.PennywiseDbHelper;
 import com.example.pennywise.R;
 import com.example.pennywise.models.Bill;
 import com.example.pennywise.models.Expense;
 import com.example.pennywise.models.SavingsGoal;
+import com.google.firebase.Timestamp;
+
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+
 
 public class NotificationWorker extends Worker {
     private static final String TAG = "NotificationWorker";
@@ -66,33 +75,42 @@ public class NotificationWorker extends Worker {
     private FinancialData getFinancialData() {
         FinancialData data = new FinancialData();
 
-        // ----------------------------
-        // Dummy Expenses with Timestamps
-        // ----------------------------
-        data.expenses = new ArrayList<>();
-        data.expenses.add(new Expense("Food", 150f, new com.google.firebase.Timestamp(new Date())));
-        data.expenses.add(new Expense("Transport", 80f, new com.google.firebase.Timestamp(new Date())));
-        data.expenses.add(new Expense("Books", 120f, new com.google.firebase.Timestamp(new Date())));
-
-        // ----------------------------
-        // Dummy Savings Goals
-        // ----------------------------
-        data.savings = new ArrayList<>();
-        data.savings.add(new SavingsGoal("New Phone", 500f, 200f));
-        data.savings.add(new SavingsGoal("Laptop", 1000f, 100f));
-
-        // ----------------------------
-        // Dummy Bills
-        // ----------------------------
         data.bills = new ArrayList<>();
-        data.bills.add(new Bill("Electricity", 75.0, false));
-        data.bills.add(new Bill("Internet", 50.0, false));
+        data.savings = new ArrayList<>();
+        data.expenses = new ArrayList<>();
 
         // ----------------------------
-        // Balance & Threshold
+        // LOAD BILLS FROM DB
         // ----------------------------
-        data.balance = 1200.0;
-        data.threshold = 1000.0;
+        Cursor billCursor = getApplicationContext().getContentResolver()
+                .query(PennywiseContract.BillEntry.CONTENT_URI, null, null, null, null);
+
+        if (billCursor != null) {
+            while (billCursor.moveToNext()) {
+                int id = billCursor.getInt(billCursor.getColumnIndexOrThrow(PennywiseContract.BillEntry._ID));
+                String name = billCursor.getString(billCursor.getColumnIndexOrThrow(PennywiseContract.BillEntry.COLUMN_NAME));
+                double amount = billCursor.getDouble(billCursor.getColumnIndexOrThrow(PennywiseContract.BillEntry.COLUMN_AMOUNT));
+                boolean isPaid = billCursor.getInt(billCursor.getColumnIndexOrThrow(PennywiseContract.BillEntry.COLUMN_IS_PAID)) == 1;
+                String path = billCursor.getString(billCursor.getColumnIndexOrThrow(PennywiseContract.BillEntry.COLUMN_IMAGE_URI));
+                Uri imageUri = path != null ? Uri.parse(path) : null;
+
+                data.bills.add(new Bill(id, name, amount, isPaid, imageUri));
+            }
+            billCursor.close();
+        }
+
+        // ----------------------------
+        // LOAD SAVINGS GOALS FROM DB
+        // ----------------------------
+
+
+
+
+        // ----------------------------
+        // LOAD BALANCE & THRESHOLD
+        // ----------------------------
+        // You can save balance & threshold in SharedPreferences or a DB table
+
 
         return data;
     }
@@ -113,7 +131,7 @@ public class NotificationWorker extends Worker {
                 float progress = (goal.getSavedAmount() / goal.getTargetAmount()) * 100;
 
                 if (progress >= 50 && progress < 100) {
-                    String message = String.format(Locale.getDefault(), "You're %d%% towards your %s goal!", (int)progress, goal.getPurpose());
+                    String message = String.format(Locale.getDefault(), "You're %d%% towards your %s goal!", (int) progress, goal.getPurpose());
                     sendNotification("🎯 Savings Progress", message);
                 } else if (progress >= 100) {
                     String message = String.format("Congratulations! You reached your %s goal! 🎉", goal.getPurpose());
@@ -139,17 +157,14 @@ public class NotificationWorker extends Worker {
             sendNotification("📅 Unpaid Bills", message);
         }
     }
-    private void checkDailySpending(FinancialData data) {
 
+    private void checkDailySpending(FinancialData data) {
         double dailyTotal = 0;
-        String today = getCurrentDate();   // format: yyyy-MM-dd
+        String today = getCurrentDate(); // format: dd/MM/yyyy
 
         for (Expense expense : data.expenses) {
-
             if (expense.getCreatedAt() != null) {
-
-                // Convert timestamp to yyyy-MM-dd
-                String expenseDate = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+                String expenseDate = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
                         .format(expense.getCreatedAt().toDate());
 
                 if (today.equals(expenseDate)) {
@@ -159,12 +174,10 @@ public class NotificationWorker extends Worker {
         }
 
         if (dailyTotal > 100) {
-            String msg = String.format(Locale.getDefault(),
-                    "You've spent ₹%.2f today", dailyTotal);
+            String msg = String.format(Locale.getDefault(), "You've spent ₹%.2f today", dailyTotal);
             sendNotification("💸 Daily Spending Alert", msg);
         }
     }
-
 
     private double calculateRemainingBalance(FinancialData data) {
         double totalExpenses = 0;

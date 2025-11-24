@@ -15,20 +15,23 @@ public final class PennywiseContract {
     public static final String PATH_SAVINGS = "savings";
 
     // ----------------------- BILLS -----------------------
-    // ----------------------- BILLS -----------------------
     public static final class BillEntry implements BaseColumns {
+
         public static final Uri CONTENT_URI =
                 Uri.withAppendedPath(BASE_CONTENT_URI, PATH_BILLS);
 
         public static final String TABLE_NAME = "bills";
 
+        // Columns
+        public static final String _ID = BaseColumns._ID;  // primary key
         public static final String COLUMN_NAME = "name";
         public static final String COLUMN_AMOUNT = "amount";
         public static final String COLUMN_DUE_DATE = "due_date";
         public static final String COLUMN_IS_PAID = "is_paid";
-        public static final String COLUMN_IMAGE_URI = "image_uri"; // new column for multimedia
+        public static final String COLUMN_IMAGE_URI = "image_uri";   // stores Uri as string
         public static final String COLUMN_CREATED_AT = "created_at";
 
+        // MIME types
         public static final String CONTENT_LIST_TYPE =
                 ContentResolver.CURSOR_DIR_BASE_TYPE + "/vnd." + AUTHORITY + ".bills";
 
@@ -36,20 +39,23 @@ public final class PennywiseContract {
                 ContentResolver.CURSOR_ITEM_BASE_TYPE + "/vnd." + AUTHORITY + ".bills";
     }
 
-
     // ----------------------- SAVINGS -----------------------
     public static final class SavingsEntry implements BaseColumns {
+
         public static final Uri CONTENT_URI =
                 Uri.withAppendedPath(BASE_CONTENT_URI, PATH_SAVINGS);
 
         public static final String TABLE_NAME = "savings";
 
+        // Columns
+        public static final String _ID = BaseColumns._ID;
         public static final String COLUMN_PURPOSE = "purpose";
         public static final String COLUMN_TARGET = "target_amount";
         public static final String COLUMN_SAVED = "saved_amount";
         public static final String COLUMN_DEADLINE = "deadline";
         public static final String COLUMN_CREATED_AT = "created_at";
 
+        // MIME
         public static final String CONTENT_LIST_TYPE =
                 ContentResolver.CURSOR_DIR_BASE_TYPE + "/vnd." + AUTHORITY + ".savings";
 
